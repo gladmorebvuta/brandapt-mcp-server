@@ -1,7 +1,13 @@
 # Brandapt MCP Server — Claude Tooling
 
-> **Start every session by reading STATUS.md and CHANGELOG.md.**  
-> **Update STATUS.md + CHANGELOG.md before your final commit.**
+## BEFORE YOU DO ANYTHING — Read These Files:
+1. **STATUS.md** — feature map, decision log, what's WIP, what's done
+2. **CHANGELOG.md** — what shipped recently
+3. **This file** — conventions below
+
+## BEFORE YOUR FINAL COMMIT:
+1. **Update STATUS.md** — any feature status change, new decisions, new tech debt
+2. **Append to CHANGELOG.md** — Added/Changed/Fixed/Removed under today's date
 
 ## Overview
 A Model Context Protocol (MCP) server that gives Claude Code read access to BrandaptOS data. Runs locally, connects via Firebase Admin SDK.
