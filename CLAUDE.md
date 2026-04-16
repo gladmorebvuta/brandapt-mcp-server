@@ -1,5 +1,8 @@
 # Brandapt MCP Server — Claude Tooling
 
+> **Start every session by reading STATUS.md and CHANGELOG.md.**  
+> **Update STATUS.md + CHANGELOG.md before your final commit.**
+
 ## Overview
 A Model Context Protocol (MCP) server that gives Claude Code read access to BrandaptOS data. Runs locally, connects via Firebase Admin SDK.
 
