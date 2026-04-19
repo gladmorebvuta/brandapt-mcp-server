@@ -1,0 +1,85 @@
+name: require-changelog
+
+# Enforces CHANGELOG.md is updated alongside code changes.
+#
+# Escape hatches:
+#   - Put "[skip-changelog]" (case-insensitive) in the PR title for genuine one-offs
+#     (dependabot bumps, CI-only tweaks, tooling experiments)
+#   - Add the "skip-changelog" label to the PR (persists across title edits)
+#   - Docs-only, CI-only, or config-only PRs auto-pass (see CODE_CHANGED filter)
+#
+# What counts as "code":
+#   Anything NOT matched by this pattern counts as code and requires CHANGELOG:
+#     \.(md|mdx)$   — docs
+#     ^\.github/    — CI/workflow files
+#     ^docs/        — docs folder
+#     ^\.gitignore$ ^\.gitattributes$ ^LICENSE$ — metadata
+#
+# To require this check in GitHub branch protection (plans that support it):
+#   Settings → Branches → Edit rule for main → Require status checks to pass
+#   → select "require-changelog / check"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for CHANGELOG update
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          # Escape hatch 1: PR title
+          if echo "$PR_TITLE" | grep -qiE '\[skip[- ]changelog\]'; then
+            echo "::notice::Escape hatch in PR title — CHANGELOG check skipped."
+            exit 0
+          fi
+
+          # Escape hatch 2: label
+          if echo "$PR_LABELS" | grep -q '"skip-changelog"'; then
+            echo "::notice::skip-changelog label present — CHANGELOG check skipped."
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files:"
+          echo "$CHANGED"
+          echo "---"
+
+          # Filter out docs / CI / metadata — anything left is "code"
+          CODE_CHANGED=$(echo "$CHANGED" \
+            | grep -vE '\.(md|mdx)$|^\.github/|^docs/|^\.gitignore$|^\.gitattributes$|^LICENSE$' \
+            || true)
+
+          if [ -z "$CODE_CHANGED" ]; then
+            echo "::notice::No code files changed — CHANGELOG not required."
+            exit 0
+          fi
+
+          if echo "$CHANGED" | grep -qE '^CHANGELOG\.md$'; then
+            echo "::notice::CHANGELOG.md updated — OK."
+            exit 0
+          fi
+
+          echo "::error::Code changes detected but CHANGELOG.md was not updated."
+          echo ""
+          echo "Options:"
+          echo "  1. Add an entry to CHANGELOG.md for these changes (recommended)"
+          echo "  2. Add '[skip-changelog]' to the PR title if this truly doesn't warrant an entry"
+          echo "  3. Add the 'skip-changelog' label to the PR"
+          echo ""
+          echo "Code files changed:"
+          echo "$CODE_CHANGED"
+          exit 1
