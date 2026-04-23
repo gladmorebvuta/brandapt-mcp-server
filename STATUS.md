@@ -2,7 +2,7 @@
 
 **Stack:** Node.js + TypeScript + MCP SDK + Firebase Admin  
 **Purpose:** Gives Claude Code read access to BrandaptOS data  
-**Last updated:** 2026-04-16
+**Last updated:** 2026-04-23
 
 ## Feature Map
 
@@ -23,6 +23,8 @@
 |------|----------|-----------|---------|
 | 2026-03 | Firebase Admin SDK (not client) | Bypass security rules for read access | ✅ Correct |
 | 2026-03 | MCP protocol | Standard Claude Code integration | ✅ Working |
+| 2026-04-23 | Vitest for tests, ESLint flat config for lint | Align with ecosystem pattern; catch regressions early | ✅ Done |
+| 2026-04-23 | Use `Record<string, unknown>` instead of `any` for Firestore docs | Satisfies no-explicit-any lint rule while remaining practical | ✅ Done |
 
 ## Known Issues
 
@@ -31,7 +33,6 @@
 
 ## Tech Debt
 
-- No tests
 - Hardcoded to BrandaptOS collections only
 - No error handling for missing documents
 
