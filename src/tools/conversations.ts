@@ -66,14 +66,14 @@ Examples:
         }
 
         const lines = [`# Conversations${venture_id ? ` — ${venture_id}` : " (All Ventures)"}`, ""];
-        for (const c of convos as any[]) {
-          const updated = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—";
-          lines.push(`### ${c.title ?? "Untitled"} (\`${c.id}\`)`);
-          lines.push(`- **Venture**: ${c.ventureId ?? "—"}`);
-          lines.push(`- **Model**: ${c.model ?? "—"}`);
-          lines.push(`- **Messages**: ${c.messageCount ?? 0}`);
+        for (const c of convos as Record<string, unknown>[]) {
+          const updated = c.updatedAt ? new Date(String(c.updatedAt)).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—";
+          lines.push(`### ${String(c.title ?? "Untitled")} (\`${String(c.id)}\`)`);
+          lines.push(`- **Venture**: ${String(c.ventureId ?? "—")}`);
+          lines.push(`- **Model**: ${String(c.model ?? "—")}`);
+          lines.push(`- **Messages**: ${String(c.messageCount ?? 0)}`);
           lines.push(`- **Last updated**: ${updated}`);
-          if (c.tags?.length) lines.push(`- **Tags**: ${c.tags.join(", ")}`);
+          if (Array.isArray(c.tags) && c.tags.length) lines.push(`- **Tags**: ${(c.tags as string[]).join(", ")}`);
           lines.push("");
         }
         return { content: [{ type: "text", text: lines.join("\n") }] };
@@ -144,23 +144,23 @@ Examples:
           return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result };
         }
 
-        const c = convo as any;
+        const c = convo as Record<string, unknown>;
         const lines = [
-          `# ${c.title ?? "Conversation"}`,
-          `**Venture**: ${c.ventureId ?? "—"} | **Model**: ${c.model ?? "—"} | **Messages**: ${messages.length}`,
+          `# ${String(c.title ?? "Conversation")}`,
+          `**Venture**: ${String(c.ventureId ?? "—")} | **Model**: ${String(c.model ?? "—")} | **Messages**: ${messages.length}`,
           "",
           "---",
           "",
         ];
 
-        for (const msg of messages as any[]) {
-          const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+        for (const msg of messages as Record<string, unknown>[]) {
+          const time = msg.timestamp ? new Date(String(msg.timestamp)).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
           if (msg.role === "user") {
             lines.push(`**You** _(${time})_`);
-            lines.push(msg.content ?? "");
+            lines.push(String(msg.content ?? ""));
           } else {
-            lines.push(`**AI** (${msg.model ?? "AI"}) _(${time})_`);
-            lines.push(msg.content ?? "");
+            lines.push(`**AI** (${String(msg.model ?? "AI")}) _(${time})_`);
+            lines.push(String(msg.content ?? ""));
           }
           lines.push("");
         }
@@ -362,12 +362,13 @@ Examples:
         const snap = await q.get();
         const queryLower = query.toLowerCase();
 
-        const results = snap.docs
-          .map(doc => ({ id: doc.id, ...doc.data(), updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() ?? null }))
-          .filter((c: any) => {
-            const titleMatch = c.title?.toLowerCase().includes(queryLower);
-            const tagMatch = c.tags?.some((t: string) => t.toLowerCase().includes(queryLower));
-            const summaryMatch = c.summary?.toLowerCase().includes(queryLower);
+        type ConvoResult = Record<string, unknown>;
+        const results: ConvoResult[] = snap.docs
+          .map(doc => ({ id: doc.id, ...doc.data(), updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() ?? null }) as ConvoResult)
+          .filter((c: ConvoResult) => {
+            const titleMatch = typeof c.title === "string" && c.title.toLowerCase().includes(queryLower);
+            const tagMatch = Array.isArray(c.tags) && (c.tags as string[]).some((t) => t.toLowerCase().includes(queryLower));
+            const summaryMatch = typeof c.summary === "string" && c.summary.toLowerCase().includes(queryLower);
             return titleMatch || tagMatch || summaryMatch;
           })
           .slice(0, limit);
@@ -381,12 +382,12 @@ Examples:
         }
 
         const lines = [`# Search Results: "${query}"`, `Found ${results.length} conversation(s)`, ""];
-        for (const c of results as any[]) {
-          const updated = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "—";
-          lines.push(`### ${c.title ?? "Untitled"}`);
-          lines.push(`- **ID**: \`${c.id}\` | **Venture**: ${c.ventureId ?? "—"} | **Updated**: ${updated}`);
-          if (c.tags?.length) lines.push(`- **Tags**: ${c.tags.join(", ")}`);
-          if (c.summary) lines.push(`- **Summary**: ${c.summary.slice(0, 150)}...`);
+        for (const c of results) {
+          const updated = c.updatedAt ? new Date(String(c.updatedAt)).toLocaleDateString() : "—";
+          lines.push(`### ${String(c.title ?? "Untitled")}`);
+          lines.push(`- **ID**: \`${String(c.id)}\` | **Venture**: ${String(c.ventureId ?? "—")} | **Updated**: ${updated}`);
+          if (Array.isArray(c.tags) && c.tags.length) lines.push(`- **Tags**: ${(c.tags as string[]).join(", ")}`);
+          if (c.summary) lines.push(`- **Summary**: ${String(c.summary).slice(0, 150)}...`);
           lines.push("");
         }
         return { content: [{ type: "text", text: lines.join("\n") }] };

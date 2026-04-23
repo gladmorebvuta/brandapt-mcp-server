@@ -59,7 +59,7 @@ Examples:
         }
 
         const lines = ["# BrandApt Ventures", ""];
-        for (const v of ventures as any[]) {
+        for (const v of ventures as Record<string, unknown>[]) {
           lines.push(`## ${v.name} (${v.id})`);
           lines.push(`- **Status**: ${v.status ?? "—"}`);
           lines.push(`- **Stage**: ${v.stage ?? "—"}`);
@@ -116,7 +116,7 @@ Examples:
         }
 
         const venture = { id: ventureDoc.id, ...ventureDoc.data() };
-        let logs: any[] = [];
+        let logs: Record<string, unknown>[] = [];
 
         if (include_logs) {
           const logsSnap = await db
@@ -137,23 +137,25 @@ Examples:
           return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result };
         }
 
-        const v = venture as any;
+        const v = venture as Record<string, unknown>;
         const lines = [
-          `# ${v.name ?? venture_id}`,
+          `# ${String(v.name ?? venture_id)}`,
           "",
-          `**Status**: ${v.status ?? "—"} | **Stage**: ${v.stage ?? "—"} | **Health Score**: ${v.healthScore ?? "—"}`,
+          `**Status**: ${String(v.status ?? "—")} | **Stage**: ${String(v.stage ?? "—")} | **Health Score**: ${String(v.healthScore ?? "—")}`,
           "",
-          v.description ? `> ${v.description}` : "",
+          v.description ? `> ${String(v.description)}` : "",
           "",
         ];
 
         if (logs.length > 0) {
           lines.push("## Recent Project Log", "");
           for (const log of logs) {
-            const emoji = log.category === "milestone" ? "🏁" : log.category === "decision" ? "✅" : log.category === "strategic-insight" ? "💡" : "📋";
-            lines.push(`### ${emoji} ${log.category?.toUpperCase() ?? "LOG"} — ${log.timestamp ? new Date(log.timestamp).toLocaleDateString() : "—"}`);
-            lines.push(log.content ?? "");
-            if (log.rationale) lines.push(`*Rationale: ${log.rationale}*`);
+            const cat = String(log.category ?? "");
+            const emoji = cat === "milestone" ? "🏁" : cat === "decision" ? "✅" : cat === "strategic-insight" ? "💡" : "📋";
+            const ts = log.timestamp ? new Date(String(log.timestamp)).toLocaleDateString() : "—";
+            lines.push(`### ${emoji} ${cat.toUpperCase() || "LOG"} — ${ts}`);
+            lines.push(String(log.content ?? ""));
+            if (log.rationale) lines.push(`*Rationale: ${String(log.rationale)}*`);
             lines.push("");
           }
         }
@@ -305,13 +307,14 @@ Examples:
         };
 
         const lines = [`# Project Log: ${venture_id}${category ? ` (${category}s only)` : ""}`, ""];
-        for (const log of logs as any[]) {
-          const emoji = categoryEmoji[log.category] ?? "📝";
-          const date = log.timestamp ? new Date(log.timestamp).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
-          lines.push(`### ${emoji} ${log.category?.toUpperCase() ?? "LOG"} — ${date}`);
-          lines.push(log.content ?? "");
-          if (log.rationale) lines.push(`> *Rationale: ${log.rationale}*`);
-          lines.push(`— *${log.author ?? "Unknown"}*`, "");
+        for (const log of logs as Record<string, unknown>[]) {
+          const cat = String(log.category ?? "");
+          const emoji = categoryEmoji[cat] ?? "📝";
+          const date = log.timestamp ? new Date(String(log.timestamp)).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+          lines.push(`### ${emoji} ${cat.toUpperCase() || "LOG"} — ${date}`);
+          lines.push(String(log.content ?? ""));
+          if (log.rationale) lines.push(`> *Rationale: ${String(log.rationale)}*`);
+          lines.push(`— *${String(log.author ?? "Unknown")}*`, "");
         }
 
         const text = lines.join("\n");

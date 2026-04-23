@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getDb } from "../firebase.js";
-import { CHARACTER_LIMIT, DEFAULT_LIMIT, MAX_LIMIT, ResponseFormat, COLLECTIONS } from "../constants.js";
+import { DEFAULT_LIMIT, MAX_LIMIT, ResponseFormat, COLLECTIONS } from "../constants.js";
 
 export function registerKnowledgeTools(server: McpServer): void {
 
@@ -157,8 +157,8 @@ Examples:
         for (const { date, data } of existing) {
           if (!data) continue;
           lines.push(`## ${date}`);
-          lines.push(`**Total Events**: ${(data as any).totalEvents ?? 0}`);
-          const events = (data as any).events ?? {};
+          lines.push(`**Total Events**: ${String((data as Record<string, unknown>).totalEvents ?? 0)}`);
+          const events = ((data as Record<string, unknown>).events ?? {}) as Record<string, unknown>;
           for (const [eventType, count] of Object.entries(events)) {
             lines.push(`- ${eventType}: ${count}`);
           }
