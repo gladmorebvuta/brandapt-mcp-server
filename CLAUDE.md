@@ -9,16 +9,13 @@
 1. **Update STATUS.md** — any feature status change, new decisions, new tech debt
 2. **Append to CHANGELOG.md** — Added/Changed/Fixed/Removed under today's date
 
-## How to Write Code (MANDATORY — governs every diff)
+## Repo notes
 
-These behavioral rules apply to every edit here. They bias toward caution over speed; for trivial one-liners, use judgment. Gates define the bar; these define the mindset.
+**This server uses the Firebase Admin SDK, which bypasses security rules entirely.** Never add write access to a tool without raising it explicitly — there is no rules layer behind it to catch a mistake. Ask which tool/data scope a change touches when it isn't obvious.
 
-1. **Think before coding.** State assumptions; if uncertain, ask — especially *which tool/data scope* a change touches and the fact that this server uses the Admin SDK (it bypasses security rules, so never silently add write access). Present alternatives instead of silently picking one. Architecture tradeoffs go in the STATUS.md Decision Log.
-2. **Simplicity first.** Minimum code that solves the problem. No speculative tools, no single-use abstractions, no error handling for impossible cases. 200 lines that could be 50 → rewrite. Ask: "Would a senior engineer call this overcomplicated?"
-3. **Surgical changes.** Touch only what you must; don't refactor what isn't broken or restyle adjacent code. Match the repo's patterns — zod validation on every tool input, lazy Firebase Admin init in `firebase.ts`. Remove only the orphans YOUR change created; log unrelated dead code to STATUS.md rather than deleting it. Every changed line traces to the request.
-4. **Goal-driven execution.** Turn vague tasks into verifiable goals ("add a tool" → "register it, then invoke it through the MCP client and confirm the response shape"). For multi-step work, state a brief plan with a verify step each. **Verify =** `npm run build` (tsc clean) + a live tool invocation.
+**Patterns to match:** zod validation on every tool input · lazy Firebase Admin init in `firebase.ts`.
 
-**Working if:** fewer stray diffs, fewer overcomplication rewrites, and questions land before implementation rather than after.
+**Gates:** `npm run build` (tsc clean), plus a live tool invocation through an MCP client to confirm the response shape.
 
 ## Overview
 A Model Context Protocol (MCP) server that gives Claude Code read access to BrandaptOS data. Runs locally, connects via Firebase Admin SDK.
